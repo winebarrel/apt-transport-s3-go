@@ -1,0 +1,20 @@
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - main: ./cmd/s3
+    binary: s3
+    ldflags:
+      - -X main.version={{.Version}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+checksum:
+  name_template: "checksums.txt"
+nfpms:
+  - id: apt-transport-s3-g-nfpms
+    file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Arch }}"
+    formats:
+      - deb
+    bindir: /usr/lib/apt/methods
