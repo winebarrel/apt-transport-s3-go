@@ -36,3 +36,4 @@ apt update
 
 * [apt-transport-s3 License & Copyright](https://github.com/MayaraCloud/apt-transport-s3#license--copyright)
 * [APT Method Interface](http://www.fifi.org/doc/libapt-pkg-doc/method.html/index.html#abstract)
+* [google/apt-golang-s3: An s3 transport method for the apt package management system](https://github.com/google/apt-golang-s3)
