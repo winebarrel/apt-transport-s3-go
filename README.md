@@ -14,6 +14,10 @@ dpkg -i apt-transport-s3-go_x.x.x_amd64.deb
 ## Usage
 
 ```sh
+# aws s3 ls s3://my-bucket/repo/
+#                           PRE dists/
+#                           PRE pool/
+
 echo 'deb s3://ap-northeast-1@my-bucket/repo/ xenial main' > /etc/apt/sources.list.d/s3.list
 apt update
 apt install any-pkg
