@@ -157,7 +157,7 @@ func Fetch(ctx context.Context, w io.Writer, api S3API, header map[string][]stri
 	bucket := uri.Host
 	key := strings.TrimPrefix(uri.Path, "/")
 
-	logger = zerolog.Ctx(ctx).With().Str("bucket", bucket).Str("key", key).Logger()
+	logger = logger.With().Str("bucket", bucket).Str("key", key).Logger()
 	logger.Debug().Msg("head object")
 	objHead, err := api.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
