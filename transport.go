@@ -34,7 +34,6 @@ func init() {
 		if err != nil {
 			log.Warn().Err(err).Send()
 		} else {
-
 			zerolog.SetGlobalLevel(logLevel)
 		}
 	}
