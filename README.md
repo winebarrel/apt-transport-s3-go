@@ -4,6 +4,13 @@ apt-transport-s3-go is a Go port of [apt-transport-s3](https://github.com/Mayara
 
 [![test](https://github.com/winebarrel/apt-transport-s3-go/actions/workflows/test.yml/badge.svg)](https://github.com/winebarrel/apt-transport-s3-go/actions/workflows/test.yml)
 
+## Installation
+
+```sh
+# download from https://github.com/winebarrel/apt-transport-s3-go/releases
+dpkg -i apt-transport-s3-go_x.x.x_amd64.deb
+```
+
 ## Usage
 
 ```sh
