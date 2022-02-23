@@ -128,7 +128,11 @@ func Configure(ctx context.Context, header map[string][]string) (aws.Config, err
 			optFuns = append(optFuns, config.WithHTTPClient(httpClient))
 		case "Acquire::s3::region":
 			optFuns = append(optFuns, config.WithRegion(value))
+		default:
+			continue
 		}
+
+		logger.Debug().Str(key, value).Msg("configure")
 	}
 
 	return config.LoadDefaultConfig(ctx, optFuns...)
