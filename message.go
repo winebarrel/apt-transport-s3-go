@@ -91,7 +91,7 @@ func read(ctx context.Context, r *bufio.Reader) (int, string, map[string][]strin
 	status := words[1]
 	header := map[string][]string{}
 
-	// read header
+	// header
 	for {
 		line, err := readLine(r)
 		logger.Debug().Err(err).Str("line", line).Msg("read header")
