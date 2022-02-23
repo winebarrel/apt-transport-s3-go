@@ -94,6 +94,7 @@ func SendCapabilities(ctx context.Context, w io.Writer) {
 func Configure(ctx context.Context, header map[string][]string) (aws.Config, error) {
 	logger := zerolog.Ctx(ctx)
 	logger.Debug().Msg("start configure")
+	defer logger.Debug().Msg("finish configure")
 	cfgItems, ok := header["Config-Item"]
 
 	if !ok {
@@ -130,7 +131,6 @@ func Configure(ctx context.Context, header map[string][]string) (aws.Config, err
 		}
 	}
 
-	logger.Debug().Msg("finish configure")
 	return config.LoadDefaultConfig(ctx, optFuns...)
 }
 
