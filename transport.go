@@ -191,6 +191,7 @@ func Fetch(ctx context.Context, w io.Writer, api S3API, header map[string][]stri
 	defer obj.Body.Close()
 
 	fn := header["Filename"][0]
+	logger.Debug().Str("filename", fn).Msg("create file")
 	fp, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 
 	if err != nil {
