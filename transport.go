@@ -112,7 +112,8 @@ func Configure(ctx context.Context, header map[string][]string) (aws.Config, err
 		key := words[0]
 		value := words[1]
 
-		if key == "Acquire::http::Proxy" {
+		switch key {
+		case "Acquire::http::Proxy":
 			proxyURL, err := url.Parse(value)
 
 			if err != nil {
@@ -124,6 +125,8 @@ func Configure(ctx context.Context, header map[string][]string) (aws.Config, err
 			})
 
 			optFuns = append(optFuns, config.WithHTTPClient(httpClient))
+		case "Acquire::s3::region":
+			optFuns = append(optFuns, config.WithRegion(value))
 		}
 	}
 
@@ -150,21 +153,13 @@ func Fetch(ctx context.Context, w io.Writer, api S3API, header map[string][]stri
 
 	bucket := uri.Host
 	key := strings.TrimPrefix(uri.Path, "/")
-	region := uri.User.Username()
-	s3opts := []func(opt *s3.Options){}
 
-	if region != "" {
-		s3opts = append(s3opts, func(opt *s3.Options) {
-			opt.Region = region
-		})
-	}
-
-	logger = zerolog.Ctx(ctx).With().Str("bucket", bucket).Str("key", key).Str("region", region).Logger()
+	logger = zerolog.Ctx(ctx).With().Str("bucket", bucket).Str("key", key).Logger()
 	logger.Debug().Msg("head object")
 	objHead, err := api.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
-	}, s3opts...)
+	})
 
 	if err != nil {
 		send(ctx, w, 400, map[string]string{"URI": uriStr, "Message": err.Error()})
@@ -181,7 +176,7 @@ func Fetch(ctx context.Context, w io.Writer, api S3API, header map[string][]stri
 	obj, err := api.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
-	}, s3opts...)
+	})
 
 	if err != nil {
 		send(ctx, w, 400, map[string]string{"URI": uriStr, "Message": err.Error()})

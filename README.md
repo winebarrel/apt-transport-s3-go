@@ -19,7 +19,8 @@ dpkg -i apt-transport-s3-go_x.x.x_amd64.deb
 #                           PRE dists/
 #                           PRE pool/
 
-echo 'deb s3://ap-northeast-1@my-bucket/repo/ xenial main' > /etc/apt/sources.list.d/s3.list
+echo "Acquire::s3::region ap-northeast-1;" > /etc/apt/apt.conf.d/s3
+echo 'deb s3://my-bucket/repo/ xenial main' > /etc/apt/sources.list.d/s3.list
 apt update
 apt install any-pkg
 ```
