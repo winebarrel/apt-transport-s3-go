@@ -70,8 +70,8 @@ func read(ctx context.Context, r *bufio.Reader) (Status, string, map[string][]st
 	logger := zerolog.Ctx(ctx)
 	var line string
 
-	// read status line
 	for {
+		// read status line
 		var err error
 		line, err = readLine(r)
 		logger.Debug().Err(err).Str("line", line).Msg("read status line")
@@ -85,7 +85,7 @@ func read(ctx context.Context, r *bufio.Reader) (Status, string, map[string][]st
 		}
 	}
 
-	// status line
+	// parse status line
 	words := strings.SplitN(line, " ", 2)
 
 	if len(words) != 2 {
@@ -101,8 +101,8 @@ func read(ctx context.Context, r *bufio.Reader) (Status, string, map[string][]st
 	status := words[1]
 	header := map[string][]string{}
 
-	// header
 	for {
+		// read header
 		line, err := readLine(r)
 		logger.Debug().Err(err).Str("line", line).Msg("read header")
 
@@ -114,6 +114,7 @@ func read(ctx context.Context, r *bufio.Reader) (Status, string, map[string][]st
 			return Status(code), status, header, err
 		}
 
+		// parse header
 		words := strings.SplitN(line, ":", 2)
 
 		if len(words) != 2 {
