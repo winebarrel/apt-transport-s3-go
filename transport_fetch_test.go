@@ -40,7 +40,7 @@ func (m *MockS3API) HeadObject(ctx context.Context, params *s3.HeadObjectInput, 
 }
 
 func timeMustParse(layout, value string) time.Time {
-	t, err := time.Parse(time.RFC3339, "2022-11-20T12:34:56+00:00")
+	t, err := time.Parse(layout, value)
 
 	if err != nil {
 		panic(err)
