@@ -2,6 +2,7 @@ package apttransports3go_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -17,20 +19,35 @@ import (
 )
 
 type MockS3API struct {
+	Body            io.ReadCloser
+	ContentLength   int
+	LastModified    time.Time
+	GetObjectError  error
+	HeadObjectError error
 }
 
-func (*MockS3API) GetObject(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
+func (m *MockS3API) GetObject(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
 	return &s3.GetObjectOutput{
-		Body: io.NopCloser(strings.NewReader("apt body")),
-	}, nil
+		Body: m.Body,
+	}, m.GetObjectError
 }
 
-func (*MockS3API) HeadObject(ctx context.Context, params *s3.HeadObjectInput, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error) {
-	t, _ := time.Parse(time.RFC3339, "2022-11-20T12:34:56+00:00")
+func (m *MockS3API) HeadObject(ctx context.Context, params *s3.HeadObjectInput, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error) {
+	//	t, _ := time.Parse(time.RFC3339, "2022-11-20T12:34:56+00:00")
 	return &s3.HeadObjectOutput{
-		ContentLength: 100,
-		LastModified:  &t,
-	}, nil
+		ContentLength: int64(m.ContentLength),
+		LastModified:  aws.Time(m.LastModified),
+	}, m.HeadObjectError
+}
+
+func timeMustParse(layout, value string) time.Time {
+	t, err := time.Parse(time.RFC3339, "2022-11-20T12:34:56+00:00")
+
+	if err != nil {
+		panic(err)
+	}
+
+	return t
 }
 
 func TestFetch_OK(t *testing.T) {
@@ -44,7 +61,11 @@ func TestFetch_OK(t *testing.T) {
 
 	var buf strings.Builder
 	ctx := log.Logger.WithContext(context.Background())
-	apttransports3go.Fetch(ctx, &buf, &MockS3API{}, header)
+	apttransports3go.Fetch(ctx, &buf, &MockS3API{
+		Body:          io.NopCloser(strings.NewReader("apt body")),
+		ContentLength: 100,
+		LastModified:  timeMustParse(time.RFC3339, "2022-11-20T12:34:56+00:00"),
+	}, header)
 
 	assert.Equal(fmt.Sprintf(`102 Status
 Message: Waiting for headers
@@ -66,4 +87,67 @@ Size: 100
 URI: s3://example.com/key
 
 `, dl.Name()), buf.String())
+}
+
+func TestFetch_HeadObjectError(t *testing.T) {
+	assert := assert.New(t)
+	dl, _ := ioutil.TempFile("", "")
+	defer os.Remove(dl.Name())
+	header := map[string][]string{
+		"URI":      {"s3://example.com/key"},
+		"Filename": {dl.Name()},
+	}
+
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	apttransports3go.Fetch(ctx, &buf, &MockS3API{
+		Body:            io.NopCloser(strings.NewReader("apt body")),
+		ContentLength:   100,
+		LastModified:    timeMustParse(time.RFC3339, "2022-11-20T12:34:56+00:00"),
+		HeadObjectError: errors.New("HeadObjectError"),
+	}, header)
+
+	assert.Equal(`102 Status
+Message: Waiting for headers
+URI: s3://example.com/key
+
+400 URI Failure
+Message: HeadObjectError
+URI: s3://example.com/key
+
+`, buf.String())
+}
+
+func TestFetch_GetObjectError(t *testing.T) {
+	assert := assert.New(t)
+	dl, _ := ioutil.TempFile("", "")
+	defer os.Remove(dl.Name())
+	header := map[string][]string{
+		"URI":      {"s3://example.com/key"},
+		"Filename": {dl.Name()},
+	}
+
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	apttransports3go.Fetch(ctx, &buf, &MockS3API{
+		Body:           io.NopCloser(strings.NewReader("apt body")),
+		ContentLength:  100,
+		LastModified:   timeMustParse(time.RFC3339, "2022-11-20T12:34:56+00:00"),
+		GetObjectError: errors.New("GetObjectError"),
+	}, header)
+
+	assert.Equal(`102 Status
+Message: Waiting for headers
+URI: s3://example.com/key
+
+200 URI Start
+Last-Modified: Sun, 20 Nov 2022 12:34:56 UTC
+Size: 100
+URI: s3://example.com/key
+
+400 URI Failure
+Message: GetObjectError
+URI: s3://example.com/key
+
+`, buf.String())
 }
