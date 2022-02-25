@@ -33,7 +33,6 @@ func (m *MockS3API) GetObject(ctx context.Context, params *s3.GetObjectInput, op
 }
 
 func (m *MockS3API) HeadObject(ctx context.Context, params *s3.HeadObjectInput, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error) {
-	//	t, _ := time.Parse(time.RFC3339, "2022-11-20T12:34:56+00:00")
 	return &s3.HeadObjectOutput{
 		ContentLength: int64(m.ContentLength),
 		LastModified:  aws.Time(m.LastModified),
