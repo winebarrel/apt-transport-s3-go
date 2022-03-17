@@ -32,6 +32,12 @@ export ATS3_LOG_LEVEL=debug
 apt update
 ```
 
+### S3 download mode
+
+```sh
+/usr/lib/apt/methods/s3 s3://my-bucket/key
+```
+
 ## Related Links
 
 * [apt-transport-s3 License & Copyright](https://github.com/MayaraCloud/apt-transport-s3#license--copyright)
