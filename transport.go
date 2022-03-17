@@ -225,3 +225,36 @@ func Fetch(ctx context.Context, w io.Writer, api S3API, header map[string][]stri
 	logger.Debug().Msg("finish fetch")
 	return nil
 }
+
+func Download(ctx context.Context, w io.Writer, api S3API, uriStr string) error {
+	logger := zerolog.Ctx(ctx).With().Str("uri", uriStr).Logger()
+	logger.Debug().Msg("start download")
+	uri, err := url.Parse(uriStr)
+
+	if err != nil {
+		return fmt.Errorf("bad URI: %w: %s", err, uriStr)
+	}
+
+	bucket := uri.Host
+	key := strings.TrimPrefix(uri.Path, "/")
+
+	logger.Debug().Msg("get object")
+	obj, err := api.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+
+	if err != nil {
+		return fmt.Errorf("get object failed: %w: %s", err, uriStr)
+	}
+
+	defer obj.Body.Close()
+	_, err = io.Copy(w, obj.Body)
+
+	if err != nil {
+		return fmt.Errorf("copy object failed: %w: %s", err, uriStr)
+	}
+
+	logger.Debug().Msg("finish download")
+	return nil
+}
