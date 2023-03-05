@@ -14,5 +14,7 @@ jobs:
           go-version: ">= 1.20.1"
       - name: Lint
         uses: golangci/golangci-lint-action@v3
+        with:
+          args: -E misspell
       - name: Test
         run: make vet test
