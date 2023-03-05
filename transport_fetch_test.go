@@ -27,7 +27,7 @@ func TestFetch_OK(t *testing.T) {
 
 	var buf strings.Builder
 	ctx := log.Logger.WithContext(context.Background())
-	apttransports3go.Fetch(ctx, &buf, &MockS3API{
+	apttransports3go.Fetch(ctx, &buf, &MockS3API{ //nolint:errcheck
 		Body:          io.NopCloser(strings.NewReader("apt body")),
 		ContentLength: 100,
 		LastModified:  timeMustParse(time.RFC3339, "2022-11-20T12:34:56+00:00"),
@@ -66,7 +66,7 @@ func TestFetch_HeadObjectError(t *testing.T) {
 
 	var buf strings.Builder
 	ctx := log.Logger.WithContext(context.Background())
-	apttransports3go.Fetch(ctx, &buf, &MockS3API{
+	apttransports3go.Fetch(ctx, &buf, &MockS3API{ //nolint:errcheck
 		Body:            io.NopCloser(strings.NewReader("apt body")),
 		ContentLength:   100,
 		LastModified:    timeMustParse(time.RFC3339, "2022-11-20T12:34:56+00:00"),
@@ -95,7 +95,7 @@ func TestFetch_GetObjectError(t *testing.T) {
 
 	var buf strings.Builder
 	ctx := log.Logger.WithContext(context.Background())
-	apttransports3go.Fetch(ctx, &buf, &MockS3API{
+	apttransports3go.Fetch(ctx, &buf, &MockS3API{ //nolint:errcheck
 		Body:           io.NopCloser(strings.NewReader("apt body")),
 		ContentLength:  100,
 		LastModified:   timeMustParse(time.RFC3339, "2022-11-20T12:34:56+00:00"),
