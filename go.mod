@@ -3,7 +3,7 @@ module github.com/winebarrel/apt-transport-s3-go
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.17.8
+	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.21
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.32.0
 	github.com/rs/zerolog v1.29.1
