@@ -5,10 +5,6 @@ import (
 	"bytes"
 )
 
-const (
-	ReadLineBufSize = 4096
-)
-
 func readLine(r *bufio.Reader) (string, error) {
 	var buf bytes.Buffer
 
