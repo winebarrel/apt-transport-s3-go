@@ -14,6 +14,7 @@ checksum:
   name_template: "checksums.txt"
 nfpms:
   - id: apt-transport-s3-g-nfpms
+    maintainer: "Genki Sugawara <sugawara@winebarrel.jp>"
     file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Arch }}"
     formats:
       - deb
