@@ -1,6 +1,6 @@
 module github.com/winebarrel/apt-transport-s3-go
 
-go 1.17
+go 1.21.4
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.23.0
