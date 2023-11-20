@@ -171,7 +171,7 @@ func Fetch(ctx context.Context, w io.Writer, api S3API, header map[string][]stri
 
 	send(ctx, w, StatusURIStart, map[string]string{
 		"URI":           uriStr,
-		"Size":          strconv.FormatInt(objHead.ContentLength, 10),
+		"Size":          strconv.FormatInt(aws.ToInt64(objHead.ContentLength), 10),
 		"Last-Modified": objHead.LastModified.UTC().Format(time.RFC1123),
 	})
 
@@ -214,7 +214,7 @@ func Fetch(ctx context.Context, w io.Writer, api S3API, header map[string][]stri
 	send(ctx, w, StatusURIDone, map[string]string{
 		"URI":           uriStr,
 		"Filename":      fn,
-		"Size":          strconv.FormatInt(objHead.ContentLength, 10),
+		"Size":          strconv.FormatInt(aws.ToInt64(objHead.ContentLength), 10),
 		"Last-Modified": objHead.LastModified.UTC().Format(time.RFC1123),
 		"MD5-Hash":      hex.EncodeToString(hmd5Sum),
 		"MD5Sum-Hash":   hex.EncodeToString(hmd5Sum),
