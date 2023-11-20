@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -18,7 +17,7 @@ import (
 
 func TestFetch_OK(t *testing.T) {
 	assert := assert.New(t)
-	dl, _ := ioutil.TempFile("", "")
+	dl, _ := os.CreateTemp("", "")
 	defer os.Remove(dl.Name())
 	header := map[string][]string{
 		"URI":      {"s3://example.com/key"},
@@ -57,7 +56,7 @@ URI: s3://example.com/key
 
 func TestFetch_HeadObjectError(t *testing.T) {
 	assert := assert.New(t)
-	dl, _ := ioutil.TempFile("", "")
+	dl, _ := os.CreateTemp("", "")
 	defer os.Remove(dl.Name())
 	header := map[string][]string{
 		"URI":      {"s3://example.com/key"},
@@ -86,7 +85,7 @@ URI: s3://example.com/key
 
 func TestFetch_GetObjectError(t *testing.T) {
 	assert := assert.New(t)
-	dl, _ := ioutil.TempFile("", "")
+	dl, _ := os.CreateTemp("", "")
 	defer os.Remove(dl.Name())
 	header := map[string][]string{
 		"URI":      {"s3://example.com/key"},

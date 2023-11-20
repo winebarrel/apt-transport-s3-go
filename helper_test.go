@@ -25,7 +25,7 @@ func (m *MockS3API) GetObject(ctx context.Context, params *s3.GetObjectInput, op
 
 func (m *MockS3API) HeadObject(ctx context.Context, params *s3.HeadObjectInput, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error) {
 	return &s3.HeadObjectOutput{
-		ContentLength: int64(m.ContentLength),
+		ContentLength: aws.Int64(int64(m.ContentLength)),
 		LastModified:  aws.Time(m.LastModified),
 	}, m.HeadObjectError
 }

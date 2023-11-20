@@ -1,7 +1,18 @@
 name: test
 on:
-  pull_request:
   push:
+    branches:
+      - main
+  pull_request:
+
+defaults:
+  run:
+    shell: bash -xe {0}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -11,10 +22,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: ">= 1.20.1"
+          go-version-file: go.mod
+          cache: false
       - name: Lint
         uses: golangci/golangci-lint-action@v3
-        with:
-          args: -E misspell
       - name: Test
         run: make vet test
