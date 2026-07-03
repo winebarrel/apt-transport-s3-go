@@ -3,7 +3,6 @@
 apt-transport-s3-go is a Go port of [apt-transport-s3](https://github.com/MayaraCloud/apt-transport-s3).
 
 [![CI](https://github.com/winebarrel/apt-transport-s3-go/actions/workflows/ci.yml/badge.svg)](https://github.com/winebarrel/apt-transport-s3-go/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/winebarrel/apt-transport-s3-go)](https://goreportcard.com/report/github.com/winebarrel/apt-transport-s3-go)
 
 ## Installation
 
