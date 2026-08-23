@@ -2,13 +2,38 @@ package apttransports3go_test
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"strings"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	apttransports3go "github.com/winebarrel/apt-transport-s3-go"
 )
+
+func TestInitLogLevel(t *testing.T) {
+	tt := []struct {
+		name     string
+		logLevel string
+		expected zerolog.Level
+	}{
+		{"unset", "", zerolog.InfoLevel},
+		{"valid", "debug", zerolog.DebugLevel},
+		// An unparsable level is warned about and leaves the default in place.
+		{"invalid", "bogus", zerolog.InfoLevel},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			defer zerolog.SetGlobalLevel(zerolog.GlobalLevel())
+			t.Setenv("ATS3_LOG_LEVEL", tc.logLevel)
+			apttransports3go.InitLogLevel()
+			assert.Equal(t, tc.expected, zerolog.GlobalLevel())
+		})
+	}
+}
 
 func TestRun_OK(t *testing.T) {
 	assert := assert.New(t)
@@ -54,6 +79,29 @@ func TestRun_ReadError(t *testing.T) {
 	ctx := log.Logger.WithContext(context.Background())
 	err := apttransports3go.Run(ctx, r, &buf)
 	assert.EqualError(err, "bad status line: 600")
+}
+
+func TestRun_URIAcquire(t *testing.T) {
+	assert := assert.New(t)
+	dl, _ := os.CreateTemp("", "")
+	defer os.Remove(dl.Name())
+
+	// No Configuration message precedes this, so Run builds the S3 client from
+	// a zero-value aws.Config. The request fails client-side on the missing
+	// region without touching the network, and apt is told via URI Failure.
+	r := strings.NewReader(fmt.Sprintf(`600 URI Acquire
+URI: s3://example.com/key
+Filename: %s
+
+`, dl.Name()))
+
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	err := apttransports3go.Run(ctx, r, &buf)
+
+	assert.NoError(err)
+	assert.Contains(buf.String(), "400 URI Failure")
+	assert.Contains(buf.String(), "URI: s3://example.com/key")
 }
 
 func TestRun_SendCapabilitiesError(t *testing.T) {
