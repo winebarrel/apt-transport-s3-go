@@ -38,6 +38,24 @@ func TestRun_NG(t *testing.T) {
 	assert.EqualError(err, "not implemented: 0 Not Implemented")
 }
 
+func TestRun_EOF(t *testing.T) {
+	assert := assert.New(t)
+	r := strings.NewReader("")
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	err := apttransports3go.Run(ctx, r, &buf)
+	assert.NoError(err)
+}
+
+func TestRun_ReadError(t *testing.T) {
+	assert := assert.New(t)
+	r := strings.NewReader("600\n\n")
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	err := apttransports3go.Run(ctx, r, &buf)
+	assert.EqualError(err, "bad status line: 600")
+}
+
 func TestSendCapabilities_OK(t *testing.T) {
 	assert := assert.New(t)
 	var buf strings.Builder
@@ -56,6 +74,60 @@ func TestConfigure_OK(t *testing.T) {
 	assert := assert.New(t)
 	header := map[string][]string{
 		"Config-Item": {"Acquire::http::Proxy=http://example.com"},
+	}
+
+	ctx := log.Logger.WithContext(context.Background())
+	_, err := apttransports3go.Configure(ctx, header)
+	assert.NoError(err)
+}
+
+func TestConfigure_NoConfigItem(t *testing.T) {
+	assert := assert.New(t)
+	header := map[string][]string{}
+
+	ctx := log.Logger.WithContext(context.Background())
+	_, err := apttransports3go.Configure(ctx, header)
+	assert.NoError(err)
+}
+
+func TestConfigure_BadConfigItem(t *testing.T) {
+	assert := assert.New(t)
+	header := map[string][]string{
+		"Config-Item": {"NoEqualSign"},
+	}
+
+	ctx := log.Logger.WithContext(context.Background())
+	_, err := apttransports3go.Configure(ctx, header)
+	assert.EqualError(err, "bad config item: NoEqualSign")
+}
+
+func TestConfigure_BadProxyURL(t *testing.T) {
+	assert := assert.New(t)
+	header := map[string][]string{
+		"Config-Item": {"Acquire::http::Proxy=http://%zz"},
+	}
+
+	ctx := log.Logger.WithContext(context.Background())
+	_, err := apttransports3go.Configure(ctx, header)
+	assert.ErrorContains(err, "bad proxy URL")
+}
+
+func TestConfigure_Region(t *testing.T) {
+	assert := assert.New(t)
+	header := map[string][]string{
+		"Config-Item": {"Acquire::s3::region=us-west-2"},
+	}
+
+	ctx := log.Logger.WithContext(context.Background())
+	cfg, err := apttransports3go.Configure(ctx, header)
+	assert.NoError(err)
+	assert.Equal("us-west-2", cfg.Region)
+}
+
+func TestConfigure_UnknownConfigItem(t *testing.T) {
+	assert := assert.New(t)
+	header := map[string][]string{
+		"Config-Item": {"Acquire::Some::Other=value"},
 	}
 
 	ctx := log.Logger.WithContext(context.Background())

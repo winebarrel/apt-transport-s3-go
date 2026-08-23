@@ -3,6 +3,8 @@ package apttransports3go_test
 import (
 	"bufio"
 	"context"
+	"errors"
+	"io"
 	"strings"
 	"testing"
 
@@ -76,4 +78,39 @@ func TestRead_NG(t *testing.T) {
 	ctx := log.Logger.WithContext(context.Background())
 	_, _, _, err := apttransports3go.Read(ctx, bufio.NewReader(strings.NewReader(msg)))
 	assert.EqualError(err, `bad status code: strconv.Atoi: parsing "xxx": invalid syntax: xxx URI Acquire`)
+}
+
+func TestRead_NG_BadStatusLine(t *testing.T) {
+	assert := assert.New(t)
+	msg := "600\n\n"
+	ctx := log.Logger.WithContext(context.Background())
+	_, _, _, err := apttransports3go.Read(ctx, bufio.NewReader(strings.NewReader(msg)))
+	assert.EqualError(err, "bad status line: 600")
+}
+
+func TestRead_NG_BadHeader(t *testing.T) {
+	assert := assert.New(t)
+	msg := "600 URI Acquire\nBadHeaderNoColon\n\n"
+	ctx := log.Logger.WithContext(context.Background())
+	_, _, _, err := apttransports3go.Read(ctx, bufio.NewReader(strings.NewReader(msg)))
+	assert.EqualError(err, "bad header: BadHeaderNoColon")
+}
+
+func TestRead_NonEOFErrorDuringHeader(t *testing.T) {
+	assert := assert.New(t)
+	r := io.MultiReader(strings.NewReader("600 URI Acquire\n"), &errReadCloser{err: errors.New("ReadError")})
+	ctx := log.Logger.WithContext(context.Background())
+	_, _, _, err := apttransports3go.Read(ctx, bufio.NewReader(r))
+	assert.EqualError(err, "ReadError")
+}
+
+func TestRead_EOFDuringHeader(t *testing.T) {
+	assert := assert.New(t)
+	msg := "600 URI Acquire\n"
+	ctx := log.Logger.WithContext(context.Background())
+	code, status, header, err := apttransports3go.Read(ctx, bufio.NewReader(strings.NewReader(msg)))
+	assert.Equal(apttransports3go.Status(600), code)
+	assert.Equal("URI Acquire", status)
+	assert.Equal(map[string][]string{}, header)
+	assert.ErrorIs(err, io.EOF)
 }
