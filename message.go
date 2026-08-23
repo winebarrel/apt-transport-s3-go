@@ -44,7 +44,7 @@ func send(ctx context.Context, w io.Writer, code Status, header map[string]strin
 	status, ok := statusByCode[code]
 
 	if !ok {
-		return fmt.Errorf("status not found: %d", code)
+		return fmt.Errorf("unknown status: %d", code)
 	}
 
 	fmt.Fprintf(w, "%d %s\n", code, status)

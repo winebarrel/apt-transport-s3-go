@@ -51,7 +51,7 @@ func TestSend_UnknownStatus(t *testing.T) {
 	var buf strings.Builder
 	ctx := log.Logger.WithContext(context.Background())
 	err := apttransports3go.Send(ctx, &buf, apttransports3go.Status(999), map[string]string{"foo": "bar"})
-	assert.EqualError(err, "status not found: 999")
+	assert.EqualError(err, "unknown status: 999")
 	assert.Empty(buf.String())
 }
 
