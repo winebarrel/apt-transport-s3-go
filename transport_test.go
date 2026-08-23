@@ -64,7 +64,7 @@ func TestRun_SendCapabilitiesError(t *testing.T) {
 	var buf strings.Builder
 	ctx := log.Logger.WithContext(context.Background())
 	err := apttransports3go.Run(ctx, r, &buf)
-	assert.EqualError(err, "status not found: 100")
+	assert.EqualError(err, "unknown status: 100")
 }
 
 func TestSendCapabilities_UnknownStatus(t *testing.T) {
@@ -74,7 +74,7 @@ func TestSendCapabilities_UnknownStatus(t *testing.T) {
 	var buf strings.Builder
 	ctx := log.Logger.WithContext(context.Background())
 	err := apttransports3go.SendCapabilities(ctx, &buf)
-	assert.EqualError(err, "status not found: 100")
+	assert.EqualError(err, "unknown status: 100")
 }
 
 func TestSendCapabilities_OK(t *testing.T) {

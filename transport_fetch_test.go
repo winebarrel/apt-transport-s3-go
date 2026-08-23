@@ -94,7 +94,7 @@ func TestFetch_SendStatusError(t *testing.T) {
 	var buf strings.Builder
 	ctx := log.Logger.WithContext(context.Background())
 	err := apttransports3go.Fetch(ctx, &buf, &MockS3API{}, header)
-	assert.EqualError(err, "status not found: 102")
+	assert.EqualError(err, "unknown status: 102")
 }
 
 func TestFetch_SendURIStartError(t *testing.T) {
@@ -112,7 +112,7 @@ func TestFetch_SendURIStartError(t *testing.T) {
 		ContentLength: 100,
 		LastModified:  timeMustParse(time.RFC3339, "2022-11-20T12:34:56+00:00"),
 	}, header)
-	assert.EqualError(err, "status not found: 200")
+	assert.EqualError(err, "unknown status: 200")
 }
 
 func TestFetch_SendURIDoneError(t *testing.T) {
@@ -133,7 +133,7 @@ func TestFetch_SendURIDoneError(t *testing.T) {
 		ContentLength: 100,
 		LastModified:  timeMustParse(time.RFC3339, "2022-11-20T12:34:56+00:00"),
 	}, header)
-	assert.EqualError(err, "status not found: 201")
+	assert.EqualError(err, "unknown status: 201")
 }
 
 func TestFetch_BadURI(t *testing.T) {
