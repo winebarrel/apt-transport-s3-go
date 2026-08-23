@@ -27,3 +27,8 @@ jobs:
         uses: golangci/golangci-lint-action@v9
       - name: Test
         run: make vet test
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./coverage.out
+          token: ${{ secrets.CODECOV_TOKEN }}

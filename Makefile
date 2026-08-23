@@ -10,7 +10,7 @@ build:
 
 .PHONY: test
 test: vet
-	go test -v ./...
+	go test -v -coverprofile=coverage.out -covermode=atomic ./...
 
 .PHONY: vet
 vet:

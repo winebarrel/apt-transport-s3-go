@@ -1,3 +1,4 @@
 /s3
 
 dist/
+coverage.out
