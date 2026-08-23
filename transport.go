@@ -41,7 +41,11 @@ func init() {
 
 func Run(ctx context.Context, r io.Reader, w io.Writer) error {
 	logger := zerolog.Ctx(ctx)
-	SendCapabilities(ctx, w)
+
+	if err := SendCapabilities(ctx, w); err != nil {
+		return err
+	}
+
 	logger.Debug().Msg("start main loop")
 	defer logger.Debug().Msg("finish main loop by")
 	bufReader := bufio.NewReader(r)
@@ -79,11 +83,11 @@ func Run(ctx context.Context, r io.Reader, w io.Writer) error {
 	}
 }
 
-func SendCapabilities(ctx context.Context, w io.Writer) {
+func SendCapabilities(ctx context.Context, w io.Writer) error {
 	logger := zerolog.Ctx(ctx)
 	logger.Debug().Msg("set capabilities")
 
-	send(ctx, w, StatusCapabilities, map[string]string{
+	return send(ctx, w, StatusCapabilities, map[string]string{
 		"Version":         "1.1",
 		"Single-Instance": "true",
 		"Send-Config":     "true",
@@ -152,7 +156,9 @@ func Fetch(ctx context.Context, w io.Writer, api S3API, header map[string][]stri
 		return fmt.Errorf("bad URI: %w: %s", err, uriStr)
 	}
 
-	send(ctx, w, StatusStatus, map[string]string{"URI": uriStr, "Message": "Waiting for headers"})
+	if err := send(ctx, w, StatusStatus, map[string]string{"URI": uriStr, "Message": "Waiting for headers"}); err != nil {
+		return err
+	}
 
 	bucket := uri.Host
 	key := strings.TrimPrefix(uri.Path, "/")
@@ -165,15 +171,18 @@ func Fetch(ctx context.Context, w io.Writer, api S3API, header map[string][]stri
 	})
 
 	if err != nil {
-		send(ctx, w, StatusURIFailure, map[string]string{"URI": uriStr, "Message": err.Error()})
-		return nil
+		return send(ctx, w, StatusURIFailure, map[string]string{"URI": uriStr, "Message": err.Error()})
 	}
 
-	send(ctx, w, StatusURIStart, map[string]string{
+	err = send(ctx, w, StatusURIStart, map[string]string{
 		"URI":           uriStr,
 		"Size":          strconv.FormatInt(aws.ToInt64(objHead.ContentLength), 10),
 		"Last-Modified": objHead.LastModified.UTC().Format(time.RFC1123),
 	})
+
+	if err != nil {
+		return err
+	}
 
 	logger.Debug().Msg("get object")
 	obj, err := api.GetObject(ctx, &s3.GetObjectInput{
@@ -182,8 +191,7 @@ func Fetch(ctx context.Context, w io.Writer, api S3API, header map[string][]stri
 	})
 
 	if err != nil {
-		send(ctx, w, StatusURIFailure, map[string]string{"URI": uriStr, "Message": err.Error()})
-		return nil
+		return send(ctx, w, StatusURIFailure, map[string]string{"URI": uriStr, "Message": err.Error()})
 	}
 
 	defer obj.Body.Close()
@@ -205,13 +213,12 @@ func Fetch(ctx context.Context, w io.Writer, api S3API, header map[string][]stri
 	_, err = io.Copy(fw, obj.Body)
 
 	if err != nil {
-		send(ctx, w, StatusURIFailure, map[string]string{"URI": uriStr, "Message": err.Error()})
-		return nil
+		return send(ctx, w, StatusURIFailure, map[string]string{"URI": uriStr, "Message": err.Error()})
 	}
 
 	hmd5Sum := hmd5.Sum(nil)
 
-	send(ctx, w, StatusURIDone, map[string]string{
+	err = send(ctx, w, StatusURIDone, map[string]string{
 		"URI":           uriStr,
 		"Filename":      fn,
 		"Size":          strconv.FormatInt(aws.ToInt64(objHead.ContentLength), 10),
@@ -221,6 +228,10 @@ func Fetch(ctx context.Context, w io.Writer, api S3API, header map[string][]stri
 		"SHA256-Hash":   hex.EncodeToString(hs256.Sum(nil)),
 		"SHA512-Hash":   hex.EncodeToString(hs512.Sum(nil)),
 	})
+
+	if err != nil {
+		return err
+	}
 
 	logger.Debug().Msg("finish fetch")
 	return nil

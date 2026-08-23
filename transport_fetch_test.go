@@ -83,6 +83,59 @@ URI: s3://example.com/key
 `, buf.String())
 }
 
+func TestFetch_SendStatusError(t *testing.T) {
+	assert := assert.New(t)
+	defer apttransports3go.UnregisterStatus(apttransports3go.StatusStatus)()
+
+	header := map[string][]string{
+		"URI": {"s3://example.com/key"},
+	}
+
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	err := apttransports3go.Fetch(ctx, &buf, &MockS3API{}, header)
+	assert.EqualError(err, "status not found: 102")
+}
+
+func TestFetch_SendURIStartError(t *testing.T) {
+	assert := assert.New(t)
+	defer apttransports3go.UnregisterStatus(apttransports3go.StatusURIStart)()
+
+	header := map[string][]string{
+		"URI": {"s3://example.com/key"},
+	}
+
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	err := apttransports3go.Fetch(ctx, &buf, &MockS3API{
+		Body:          io.NopCloser(strings.NewReader("apt body")),
+		ContentLength: 100,
+		LastModified:  timeMustParse(time.RFC3339, "2022-11-20T12:34:56+00:00"),
+	}, header)
+	assert.EqualError(err, "status not found: 200")
+}
+
+func TestFetch_SendURIDoneError(t *testing.T) {
+	assert := assert.New(t)
+	defer apttransports3go.UnregisterStatus(apttransports3go.StatusURIDone)()
+
+	dl, _ := os.CreateTemp("", "")
+	defer os.Remove(dl.Name())
+	header := map[string][]string{
+		"URI":      {"s3://example.com/key"},
+		"Filename": {dl.Name()},
+	}
+
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	err := apttransports3go.Fetch(ctx, &buf, &MockS3API{
+		Body:          io.NopCloser(strings.NewReader("apt body")),
+		ContentLength: 100,
+		LastModified:  timeMustParse(time.RFC3339, "2022-11-20T12:34:56+00:00"),
+	}, header)
+	assert.EqualError(err, "status not found: 201")
+}
+
 func TestFetch_BadURI(t *testing.T) {
 	assert := assert.New(t)
 	header := map[string][]string{

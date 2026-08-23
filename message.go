@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 type Status int
@@ -40,12 +39,12 @@ var (
 	StatusMediaChanged             = newStatus(603, "Media Changed")
 )
 
-func send(ctx context.Context, w io.Writer, code Status, header map[string]string) {
+func send(ctx context.Context, w io.Writer, code Status, header map[string]string) error {
 	logger := zerolog.Ctx(ctx)
 	status, ok := statusByCode[code]
 
 	if !ok {
-		log.Fatal().Msgf("status not found: %d", code)
+		return fmt.Errorf("status not found: %d", code)
 	}
 
 	fmt.Fprintf(w, "%d %s\n", code, status)
@@ -64,6 +63,7 @@ func send(ctx context.Context, w io.Writer, code Status, header map[string]strin
 	}
 
 	fmt.Fprintf(w, "\n")
+	return nil
 }
 
 func read(ctx context.Context, r *bufio.Reader) (Status, string, map[string][]string, error) {

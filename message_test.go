@@ -40,9 +40,19 @@ func TestSend_OK(t *testing.T) {
 	for _, t := range tt {
 		var buf strings.Builder
 		ctx := log.Logger.WithContext(context.Background())
-		apttransports3go.Send(ctx, &buf, t.code, t.header)
+		err := apttransports3go.Send(ctx, &buf, t.code, t.header)
+		assert.NoError(err)
 		assert.Equal(t.expected, buf.String())
 	}
+}
+
+func TestSend_UnknownStatus(t *testing.T) {
+	assert := assert.New(t)
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	err := apttransports3go.Send(ctx, &buf, apttransports3go.Status(999), map[string]string{"foo": "bar"})
+	assert.EqualError(err, "status not found: 999")
+	assert.Empty(buf.String())
 }
 
 func TestRead_OK(t *testing.T) {

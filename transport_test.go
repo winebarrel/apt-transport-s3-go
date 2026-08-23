@@ -56,11 +56,33 @@ func TestRun_ReadError(t *testing.T) {
 	assert.EqualError(err, "bad status line: 600")
 }
 
+func TestRun_SendCapabilitiesError(t *testing.T) {
+	assert := assert.New(t)
+	defer apttransports3go.UnregisterStatus(apttransports3go.StatusCapabilities)()
+
+	r := strings.NewReader("")
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	err := apttransports3go.Run(ctx, r, &buf)
+	assert.EqualError(err, "status not found: 100")
+}
+
+func TestSendCapabilities_UnknownStatus(t *testing.T) {
+	assert := assert.New(t)
+	defer apttransports3go.UnregisterStatus(apttransports3go.StatusCapabilities)()
+
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	err := apttransports3go.SendCapabilities(ctx, &buf)
+	assert.EqualError(err, "status not found: 100")
+}
+
 func TestSendCapabilities_OK(t *testing.T) {
 	assert := assert.New(t)
 	var buf strings.Builder
 	ctx := log.Logger.WithContext(context.Background())
-	apttransports3go.SendCapabilities(ctx, &buf)
+	err := apttransports3go.SendCapabilities(ctx, &buf)
+	assert.NoError(err)
 
 	assert.Equal(`100 Capabilities
 Send-Config: true
