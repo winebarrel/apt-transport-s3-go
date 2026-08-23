@@ -38,6 +38,12 @@ apt update
 /usr/lib/apt/methods/s3 s3://my-bucket/key
 ```
 
+### Version
+
+```sh
+/usr/lib/apt/methods/s3 --version
+```
+
 ## Related Links
 
 * [apt-transport-s3 License & Copyright](https://github.com/MayaraCloud/apt-transport-s3#license--copyright)

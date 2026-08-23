@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -12,10 +13,18 @@ import (
 	apttransports3go "github.com/winebarrel/apt-transport-s3-go"
 )
 
+// version is set by goreleaser via -X main.version.
+var version = "dev"
+
 func main() {
 	logger := zerolog.New(os.Stderr).With().Timestamp().Int("pid", os.Getpid()).Logger()
 	ctx := logger.WithContext(context.Background())
-	logger.Debug().Msg("start apt-transport-s3-go")
+	logger.Debug().Str("version", version).Msg("start apt-transport-s3-go")
+
+	if len(os.Args) == 2 && os.Args[1] == "--version" {
+		fmt.Println(version)
+		return
+	}
 
 	if len(os.Args) == 2 && strings.HasPrefix(os.Args[1], "s3://") {
 		uri := os.Args[1]
