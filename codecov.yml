@@ -1,0 +1,2 @@
+ignore:
+  - "cmd/s3/main.go"
