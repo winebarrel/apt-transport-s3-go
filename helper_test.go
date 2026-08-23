@@ -39,3 +39,23 @@ func timeMustParse(layout, value string) time.Time {
 
 	return t
 }
+
+type errReadCloser struct {
+	err error
+}
+
+func (r *errReadCloser) Read(p []byte) (int, error) {
+	return 0, r.err
+}
+
+func (r *errReadCloser) Close() error {
+	return nil
+}
+
+type errWriter struct {
+	err error
+}
+
+func (w *errWriter) Write(p []byte) (int, error) {
+	return 0, w.err
+}

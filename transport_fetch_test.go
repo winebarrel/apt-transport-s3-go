@@ -83,6 +83,68 @@ URI: s3://example.com/key
 `, buf.String())
 }
 
+func TestFetch_BadURI(t *testing.T) {
+	assert := assert.New(t)
+	header := map[string][]string{
+		"URI": {"s3://example.com/%zz"},
+	}
+
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	err := apttransports3go.Fetch(ctx, &buf, &MockS3API{}, header)
+	assert.ErrorContains(err, "bad URI")
+}
+
+func TestFetch_OpenFileError(t *testing.T) {
+	assert := assert.New(t)
+	header := map[string][]string{
+		"URI":      {"s3://example.com/key"},
+		"Filename": {"bad\x00filename"},
+	}
+
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	err := apttransports3go.Fetch(ctx, &buf, &MockS3API{
+		Body:          io.NopCloser(strings.NewReader("apt body")),
+		ContentLength: 100,
+		LastModified:  timeMustParse(time.RFC3339, "2022-11-20T12:34:56+00:00"),
+	}, header)
+	assert.ErrorContains(err, "failed to open file")
+}
+
+func TestFetch_CopyError(t *testing.T) {
+	assert := assert.New(t)
+	dl, _ := os.CreateTemp("", "")
+	defer os.Remove(dl.Name())
+	header := map[string][]string{
+		"URI":      {"s3://example.com/key"},
+		"Filename": {dl.Name()},
+	}
+
+	var buf strings.Builder
+	ctx := log.Logger.WithContext(context.Background())
+	apttransports3go.Fetch(ctx, &buf, &MockS3API{ //nolint:errcheck
+		Body:          &errReadCloser{err: errors.New("BodyReadError")},
+		ContentLength: 100,
+		LastModified:  timeMustParse(time.RFC3339, "2022-11-20T12:34:56+00:00"),
+	}, header)
+
+	assert.Equal(`102 Status
+Message: Waiting for headers
+URI: s3://example.com/key
+
+200 URI Start
+Last-Modified: Sun, 20 Nov 2022 12:34:56 UTC
+Size: 100
+URI: s3://example.com/key
+
+400 URI Failure
+Message: BodyReadError
+URI: s3://example.com/key
+
+`, buf.String())
+}
+
 func TestFetch_GetObjectError(t *testing.T) {
 	assert := assert.New(t)
 	dl, _ := os.CreateTemp("", "")
