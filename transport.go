@@ -25,6 +25,10 @@ import (
 )
 
 func init() {
+	initLogLevel()
+}
+
+func initLogLevel() {
 	logLevelStr := os.Getenv("ATS3_LOG_LEVEL")
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 

@@ -1,5 +1,6 @@
 package apttransports3go
 
+var InitLogLevel = initLogLevel
 var Read = read
 var ReadLine = readLine
 var Send = send
